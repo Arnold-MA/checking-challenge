@@ -14,15 +14,4 @@ public record DataListBoardingPass(
         Long flightId
 ) {
 
-    public DataListBoardingPass(BoardingPass boardingPass) {
-        this(
-                boardingPass.getBoardingPassId(),
-                boardingPass.getPurchaseId(),
-                boardingPass.getPassenger().getPassengerId(),
-                boardingPass.getSeatTypeId(),
-                boardingPass.getSeatId(),
-                boardingPass.getFlight().getFlightId()
-        );
-    }
-
 }

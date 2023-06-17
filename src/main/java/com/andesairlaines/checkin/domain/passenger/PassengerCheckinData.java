@@ -11,7 +11,9 @@ public record PassengerCheckinData(
         Long boardingPassId,
         Long purchaseId,
         Long seatTypeId,
-        Long seatId
+        String seatType,
+        Long seatId,
+        String seat
 ) {
 
     public PassengerCheckinData(BoardingPass boardingPass) {
@@ -22,9 +24,11 @@ public record PassengerCheckinData(
                 boardingPass.getPassenger().getAge(),
                 boardingPass.getPassenger().getCountry(),
                 boardingPass.getBoardingPassId(),
-                boardingPass.getPurchaseId(),
-                boardingPass.getSeatTypeId(),
-                boardingPass.getSeatId()
+                boardingPass.getPurchase().getPurchaseId(),
+                boardingPass.getSeatType().getSeatTypeId(),
+                boardingPass.getSeatType().getName(),
+                boardingPass.getSeat() != null ? boardingPass.getSeat().getSeatId() : null,
+                boardingPass.getSeat() != null ? boardingPass.getSeat().getSeatColumn() + boardingPass.getSeat().getSeatRow() : null
         );
     }
 

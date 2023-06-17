@@ -2,6 +2,9 @@ package com.andesairlaines.checkin.domain.boardingPass;
 
 import com.andesairlaines.checkin.domain.flight.Flight;
 import com.andesairlaines.checkin.domain.passenger.Passenger;
+import com.andesairlaines.checkin.domain.purchase.Purchase;
+import com.andesairlaines.checkin.domain.seat.Seat;
+import com.andesairlaines.checkin.domain.seatType.SeatType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -18,12 +21,23 @@ public class BoardingPass {
 
     @Id
     private Long boardingPassId;
-    private Long purchaseId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "purchaseId")
+    private Purchase purchase;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "passengerId")
     private Passenger passenger;
-    private Long seatTypeId;
-    private Long seatId;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "seatTypeId")
+    private SeatType seatType;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "seatId")
+    private Seat seat;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "flightId")
     private Flight flight;
