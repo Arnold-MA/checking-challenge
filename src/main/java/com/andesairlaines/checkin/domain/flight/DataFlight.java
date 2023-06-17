@@ -1,6 +1,7 @@
 package com.andesairlaines.checkin.domain.flight;
 
 import com.andesairlaines.checkin.domain.airplane.DataListAirplane;
+import com.andesairlaines.checkin.domain.boardingPass.DataListBoardingPass;
 import com.andesairlaines.checkin.domain.passenger.Passenger;
 import com.andesairlaines.checkin.domain.passenger.PassengerCheckinData;
 
@@ -12,8 +13,8 @@ public record DataFlight(
         String takeoffAirport,
         Long landingDateTime,
         String landingAirport,
-        Long airplaneId
-        //List<PassengerCheckinData> passengers
+        Long airplaneId,
+        List<PassengerCheckinData> passengers
 ) {
 
     public DataFlight(Flight flight) {
@@ -23,7 +24,8 @@ public record DataFlight(
                 flight.getLandingAirport(),
                 flight.getLandingDateTime(),
                 flight.getLandingAirport(),
-                flight.getAirplane().getAirplaneId()
+                flight.getAirplane().getAirplaneId(),
+                flight.getBoardingPassList().stream().map(PassengerCheckinData::new).toList()
         );
     }
 

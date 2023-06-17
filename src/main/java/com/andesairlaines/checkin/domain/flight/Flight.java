@@ -1,11 +1,14 @@
 package com.andesairlaines.checkin.domain.flight;
 
 import com.andesairlaines.checkin.domain.airplane.Airplane;
+import com.andesairlaines.checkin.domain.boardingPass.BoardingPass;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @EqualsAndHashCode(of = "flightId")
@@ -24,5 +27,6 @@ public class Flight {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "airplaneId")
     private Airplane airplane;
-
+    @OneToMany(mappedBy = "flight")
+    private List<BoardingPass> boardingPassList;
 }
