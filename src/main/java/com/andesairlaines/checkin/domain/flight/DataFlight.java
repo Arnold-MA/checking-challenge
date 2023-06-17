@@ -21,7 +21,7 @@ public record DataFlight(
         this(
                 flight.getFlightId(),
                 flight.getTakeoffDateTime(),
-                flight.getLandingAirport(),
+                flight.getTakeoffAirport(),
                 flight.getLandingDateTime(),
                 flight.getLandingAirport(),
                 flight.getAirplane().getAirplaneId(),
