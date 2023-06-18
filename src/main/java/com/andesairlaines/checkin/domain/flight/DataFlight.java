@@ -23,7 +23,8 @@ public record DataFlight(
                 flight.getLandingDateTime(),
                 flight.getLandingAirport(),
                 flight.getAirplane().getAirplaneId(),
-                new AirplaneObj(flight.getAirplane().getSeats()).assign(flight.getBoardingPassList().stream().map(PassengerDTO::new).toList())
+                new AirplaneObj(flight.getAirplane().getSeats())
+                        .assign(flight.getBoardingPassList().stream().map(PassengerDTO::new).toList())
         );
     }
 
