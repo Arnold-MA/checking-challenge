@@ -34,7 +34,6 @@ public class FlightController {
 
     @GetMapping("/{id}/passengers")
     public ResponseEntity<ResponseData> flight(@PathVariable Long id) {
-        Flight flight = flightRepository.getReferenceById(id);
         return ResponseEntity.ok(new ResponseData(HttpStatus.OK.value(), new DataFlight(flightRepository.getReferenceById(id))));
     }
 

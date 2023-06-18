@@ -1,8 +1,7 @@
 package com.andesairlaines.checkin.domain.seat;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.andesairlaines.checkin.domain.airplane.Airplane;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,6 +20,8 @@ public class Seat {
     private String seatColumn;
     private Integer seatRow;
     private Long seatTypeId;
-    private Long airplaneId;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "airplaneId")
+    private Airplane airplane;
 
 }

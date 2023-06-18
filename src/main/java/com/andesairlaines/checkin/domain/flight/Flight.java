@@ -24,7 +24,7 @@ public class Flight {
     private String takeoffAirport;
     private Long landingDateTime;
     private String landingAirport;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "airplaneId")
     private Airplane airplane;
     @OneToMany(mappedBy = "flight")

@@ -1,9 +1,7 @@
 package com.andesairlaines.checkin.domain.flight;
 
-import com.andesairlaines.checkin.domain.airplane.DataListAirplane;
-import com.andesairlaines.checkin.domain.boardingPass.DataListBoardingPass;
-import com.andesairlaines.checkin.domain.passenger.Passenger;
-import com.andesairlaines.checkin.domain.passenger.PassengerCheckinData;
+import com.andesairlaines.checkin.domain.passenger.PassengerDTO;
+import com.andesairlaines.checkin.utils.AirplaneObj;
 
 import java.util.List;
 
@@ -14,7 +12,7 @@ public record DataFlight(
         Long landingDateTime,
         String landingAirport,
         Long airplaneId,
-        List<PassengerCheckinData> passengers
+        List<PassengerDTO> passengers
 ) {
 
     public DataFlight(Flight flight) {
@@ -25,8 +23,14 @@ public record DataFlight(
                 flight.getLandingDateTime(),
                 flight.getLandingAirport(),
                 flight.getAirplane().getAirplaneId(),
-                flight.getBoardingPassList().stream().map(PassengerCheckinData::new).toList()
+                new AirplaneObj(flight.getAirplane().getSeats()).assign(flight.getBoardingPassList().stream().map(PassengerDTO::new).toList())
         );
     }
 
+    /*public List<PassengerDTO> setSeats(Flight flight) {
+        AirplaneObj airplaneSeats = new AirplaneObj(flight.getAirplane().getSeats());
+        airplaneSeats.initPassengers(flight.getBoardingPassList().stream().map(PassengerDTO::new).toList());
+        System.out.println(airplaneSeats);
+        return airplaneSeats.getPassengers();
+    }*/
 }
