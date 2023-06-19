@@ -27,12 +27,4 @@ public record DataFlight(
                         .assign(flight.getBoardingPassList().stream().map(PassengerDTO::new).toList())
         );
     }
-
-    /*public List<PassengerDTO> setSeats(Flight flight) {
-        AirplaneObj airplaneSeats = new AirplaneObj(flight.getAirplane().getSeats());
-        airplaneSeats.initPassengers(flight.getBoardingPassList().stream().map(PassengerDTO::new).toList());
-        System.out.println(airplaneSeats);
-        return airplaneSeats.getPassengers();
-    }*/
 }
-
