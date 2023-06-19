@@ -40,7 +40,8 @@ public class AirplaneObj {
         initPassengers(list);
         separateSeatType();
         assignBySeatType();
-        System.out.println(this);
+        //System.out.println(this);
+        assignedPassengers.sort(Comparator.comparing(PassengerDTO::purchaseId));
         return this.assignedPassengers;
     }
 
@@ -49,6 +50,8 @@ public class AirplaneObj {
             List<PassengerDTO> passengerList = passengersBySeatType.get(seatType.getKey());
             assignPassengers(seatType.getValue(), passengerList);
         }
+        confirmAge();
+        //confirmAge();
         copyPassengers();
     }
 
@@ -202,10 +205,89 @@ public class AirplaneObj {
             for (Map.Entry<Long, SeatObj> seat : seatType.getValue().entrySet()) {
                 if (seat.getValue().getPassenger() != null) {
                     assignedPassengers.add(seat.getValue().getPassenger()
-                            .copy(seat.getKey())
+                            .copy(seat.getKey(), seat.getValue().getColumn()+seat.getValue().getRow())
                     );
                 }
             }
         }
+    }
+
+    private void confirmAge() {
+        for (Map<Long, SeatObj> seats : seatsBySeatType.values()) {
+            for (SeatObj seat : seats.values()) {
+                if (seat.getPassenger() != null && seat.getPassenger().age() < 18) {
+                    evaluateCorrect(seat, seats);
+                }
+            }
+        }
+    }
+
+    private void evaluateCorrect(SeatObj seat, Map<Long, SeatObj> seats) {
+        String column = seat.getColumn();
+        Integer row = seat.getRow();
+        Long purchaseId = seat.getPassenger().purchaseId();
+
+        existAdjacent(purchaseId, column, row, seats, seat);
+    }
+
+    private void existAdjacent(Long purchaseId, String column, Integer row, Map<Long, SeatObj> seats, SeatObj seatChilldren) {
+
+        for (SeatObj seat : seats.values()) {
+            if (seat.getPassenger() != null
+                    && purchaseId.equals(seat.getPassenger().purchaseId())
+                    && seat.getPassenger().age() >= 18
+                    && row.equals(seat.getRow())
+                    && Math.abs(column.charAt(0) - seat.getColumn().charAt(0)) == 1
+            ) {
+                return;
+            }
+        }
+        searchSamePurchase(seatChilldren, seats);
+    }
+
+    private void searchSamePurchase(SeatObj seatChilldren, Map<Long, SeatObj> seats) {
+        List<Long> idsSamePurchase = new ArrayList<>();
+        for (SeatObj seat : seats.values()) {
+            if (seat.getPassenger() != null
+                    && seat.getPassenger().purchaseId().equals(seatChilldren.getPassenger().purchaseId())
+                    && seat.getPassenger().age() > 18
+            ) {
+                idsSamePurchase.add(seat.getSeatId());
+            }
+        }
+
+        for (Long idSamePurchase : idsSamePurchase) {
+            SeatObj rightSeat = getSeatByColumnAndRow(
+                    String.valueOf((char)(seats.get(idSamePurchase).getColumn().charAt(0) + 1)),
+                    seats.get(idSamePurchase).getRow(),
+                    seats
+            );
+            SeatObj leftSeat = getSeatByColumnAndRow(
+                    String.valueOf((char)(seats.get(idSamePurchase).getColumn().charAt(0) - 1)),
+                    seats.get(idSamePurchase).getRow(),
+                    seats
+            );
+
+            if (rightSeat != null
+                    && (rightSeat.getPassenger() == null
+                    || (!rightSeat.isInmutable() && rightSeat.getPassenger().age() >= 18))
+            ) {
+                rightSeat.swapSeats(seatChilldren);
+            } else if (leftSeat != null
+                    && (leftSeat.getPassenger() == null
+                    || (!leftSeat.isInmutable() && leftSeat.getPassenger().age() >= 18))
+            ) {
+                leftSeat.swapSeats(seatChilldren);
+            }
+        }
+    }
+
+    private SeatObj getSeatByColumnAndRow(String column, Integer row, Map<Long, SeatObj> seats) {
+        for (SeatObj seat : seats.values()) {
+            if (seat.getRow().equals(row) && seat.getColumn().equals(column)){
+                return seat;
+            }
+        }
+        return null;
     }
 }
