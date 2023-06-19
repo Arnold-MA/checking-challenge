@@ -9,12 +9,22 @@ public class SeatObj {
     private Long type;
     private PassengerDTO passenger = null;
     private Boolean inmutable;
+    private Long seatId;
 
-    public SeatObj(String column, Integer row, Long type) {
+    public Long getSeatId() {
+        return seatId;
+    }
+
+    public void setSeatId(Long seatId) {
+        this.seatId = seatId;
+    }
+
+    public SeatObj(String column, Integer row, Long type, Long seatId) {
         this.column = column;
         this.row = row;
         this.type = type;
         this.inmutable = false;
+        this.seatId = seatId;
     }
 
     public Boolean isInmutable() {
