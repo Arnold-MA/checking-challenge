@@ -35,3 +35,4 @@ public record DataFlight(
         return airplaneSeats.getPassengers();
     }*/
 }
+
