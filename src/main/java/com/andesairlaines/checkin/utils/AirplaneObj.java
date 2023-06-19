@@ -205,7 +205,7 @@ public class AirplaneObj {
             for (Map.Entry<Long, SeatObj> seat : seatType.getValue().entrySet()) {
                 if (seat.getValue().getPassenger() != null) {
                     assignedPassengers.add(seat.getValue().getPassenger()
-                            .copy(seat.getKey(), seat.getValue().getColumn()+seat.getValue().getRow())
+                            .copy(seat.getKey())
                     );
                 }
             }
