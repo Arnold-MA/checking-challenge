@@ -7,19 +7,18 @@ import java.util.*;
 
 public class AirplaneObj {
 
-    private Map<Long, Map<Long, SeatObj>> seatsAirplane;
-    private Map<Long, SeatObj> seatDemo = new HashMap<>();
+    private Map<Long, Map<Long, SeatObj>> seatsBySeatType;
     private List<PassengerDTO> passengers;
-    private final Map<Long, List<PassengerDTO>> seatTypesPurchases = new HashMap<>();
+    private final Map<Long, List<PassengerDTO>> passengersBySeatType = new HashMap<>();
     private final List<PassengerDTO> assignedPassengers = new ArrayList<>();
 
     public AirplaneObj(List<Seat> seats) {
-        this.seatsAirplane = new HashMap<>();
+        this.seatsBySeatType = new HashMap<>();
         for (Seat seat : seats) {
-            if (!seatsAirplane.containsKey(seat.getSeatTypeId())) {
-                seatsAirplane.put(seat.getSeatTypeId(), new HashMap<>());
+            if (!seatsBySeatType.containsKey(seat.getSeatTypeId())) {
+                seatsBySeatType.put(seat.getSeatTypeId(), new HashMap<>());
             }
-            seatsAirplane.get(seat.getSeatTypeId()).put(seat.getSeatId(),
+            seatsBySeatType.get(seat.getSeatTypeId()).put(seat.getSeatId(),
                     new SeatObj(seat.getSeatColumn(), seat.getSeatRow(), seat.getSeatTypeId(), seat.getSeatId())
             );
         }
@@ -29,7 +28,7 @@ public class AirplaneObj {
         this.passengers = passengers;
         for (PassengerDTO passenger : passengers) {
             if (passenger.seatId() != null) {
-                seatsAirplane
+                seatsBySeatType
                         .get(passenger.seatTypeId())
                         .get(passenger.seatId())
                         .assignInitialPassenger(passenger);
@@ -41,21 +40,14 @@ public class AirplaneObj {
         initPassengers(list);
         separateSeatType();
         assignBySeatType();
-        //arbitredAssign();
         System.out.println(this);
         return this.assignedPassengers;
     }
 
     private void assignBySeatType() {
-        //Map<Long, Map<Long, List<PassengerDTO>>> purchasesTmp = new HashMap<>(seatTypesPurchases);
-        for (Map.Entry<Long, Map<Long, SeatObj>> seatType : seatsAirplane.entrySet()) {
-            List<PassengerDTO> passengerList = seatTypesPurchases.get(seatType.getKey());
-
+        for (Map.Entry<Long, Map<Long, SeatObj>> seatType : seatsBySeatType.entrySet()) {
+            List<PassengerDTO> passengerList = passengersBySeatType.get(seatType.getKey());
             assignPassengers(seatType.getValue(), passengerList);
-
-            /*for (Map.Entry<Long, SeatObj> seat : seatType.getValue().entrySet()) {
-
-            }*/
         }
         copyPassengers();
     }
@@ -63,45 +55,50 @@ public class AirplaneObj {
     private void assignPassengers(Map<Long, SeatObj> seatMap, List<PassengerDTO> passengerList) {
         List<PassengerDTO> passengersToAssign = new ArrayList<>();
 
-        // Recopilar pasajeros a asignar
-        /*for (List<PassengerDTO> passengers : passengerMap.values()) {
-            passengersToAssign.addAll(passengers);
-        }*/
 
-        passengerList.sort(Comparator.comparing(PassengerDTO::purchaseId));
         for (PassengerDTO passenger : passengerList) {
             if (passenger.seatId() == null) {
                 passengersToAssign.add(passenger);
             }
         }
-        System.out.println("Pasajeros a asignar: " + passengersToAssign.size());
-
-        // Map<purchaseId, seatId>
+        passengersToAssign.sort(Comparator.comparing(PassengerDTO::purchaseId));
         Map<Long, Long> seatAssigned = new HashMap<>();
         Map<Long, SeatObj> seatUnassigned = new HashMap<>();
         for (SeatObj seat : seatMap.values()) {
             if (seat.getPassenger() != null) {
                 seatAssigned.put(seat.getPassenger().purchaseId(), seat.getSeatId());
-                System.out.println("Pasajero previamente asignado" + seat.getPassenger());
             } else {
                 seatUnassigned.put(seat.getSeatId(), seat);
-                System.out.println("Pasajero sin asignar" + seat.getPassenger());
             }
         }
-        System.out.println("Tamaño: " + seatAssigned.size());
 
+        Map<Long, SeatObj> seatUnassignedResidual = new HashMap<>(seatUnassigned);
+        List<PassengerDTO> passengerListResidual = new ArrayList<>(passengersToAssign);
         for (PassengerDTO passenger : passengersToAssign) {
-            if (passenger.seatId() != null) {
-                if (seatAssigned.containsKey(passenger.purchaseId())) {
-                    Long seatId = seatAssigned.get(passenger.purchaseId());
-                    assignSameRow(passenger, seatId, seatUnassigned, seatMap.get(seatId).getRow(), seatMap.get(seatId).getColumn());
-                }
+            if (seatAssigned.containsKey(passenger.purchaseId())) {
+                Long seatId = seatAssigned.get(passenger.purchaseId());
+                Long idToRemove = assignSameRowOrColumn(passenger, seatId, seatUnassignedResidual, seatMap.get(seatId).getRow(), seatMap.get(seatId).getColumn());
+                passengerListResidual.remove(passenger);
+                seatUnassignedResidual.remove(idToRemove);
             }
+        }
+
+        List<SeatObj> seats = new ArrayList<>(seatUnassignedResidual.values().stream().toList());
+        seats.sort(Comparator.comparing(SeatObj::getRow));
+
+        int iter = 0;
+        for (SeatObj seat : seats) {
+            if (iter < passengerListResidual.size()){
+                seat.assignPassenger(passengerListResidual.get(iter));
+            } else {
+                break;
+            }
+            iter++;
         }
 
     }
 
-    private void assignSameRow(PassengerDTO passenger, Long seatId, Map<Long, SeatObj> seatUnassigned, Integer seatRow, String seatColumn) {
+    private Long assignSameRowOrColumn(PassengerDTO passenger, Long seatId, Map<Long, SeatObj> seatUnassigned, Integer seatRow, String seatColumn) {
 
         Map<String, SeatObj> availableColumns = new HashMap<>();
         Map<Integer, SeatObj> availableRows = new HashMap<>();
@@ -114,15 +111,17 @@ public class AirplaneObj {
             }
         }
 
-        Long seatIdToAssign = null;
+        Long seatIdToAssign;
         if (availableColumns.size() != 0) {
             seatIdToAssign = searchAdjacent(availableColumns, seatColumn);
         } else if (availableRows.size() != 0) {
             seatIdToAssign = searchAdjacent(availableRows, seatRow);
         } else {
-            //seatIdToAssign = searchOptional(seatId, seatUnassigned);
+            seatIdToAssign = searchOptional(seatId, seatUnassigned);
         }
         seatUnassigned.get(seatIdToAssign).assignPassenger(passenger);
+
+        return seatIdToAssign;
     }
 
     private Long searchOptional(Long seatId, Map<Long, SeatObj> seatUnassigned) {
@@ -170,102 +169,19 @@ public class AirplaneObj {
         return availableRows.get(rowTmp).getSeatId();
     }
 
-
-    private SeatObj findAvailableSeat(Map<Long, SeatObj> seatMap, Long purchaseId, Integer age) {
-        SeatObj adjacentSeat = null;
-
-        for (SeatObj seat : seatMap.values()) {
-            if (!seat.isInmutable() && seat.getPassenger() == null) {
-                if (seat.getPassenger() == null) {
-                    // Si el asiento está vacío, se puede asignar directamente
-                    return seat;
-                } else if (seat.getPassenger().age() >= 18 && age < 18) {
-                    // Si el asiento contiene un pasajero mayor de edad y el nuevo pasajero es menor de edad,
-                    // se almacena el asiento para un posible emparejamiento
-                    adjacentSeat = seat;
-                }
-            }
-        }
-
-        // Si no se encontró un asiento disponible, se intenta asignar junto a un asiento con un pasajero mayor de edad
-        return adjacentSeat;
-    }
-
-
-    private void arbitredAssign() {
-        Integer iter = 0;
-        for (Map.Entry<Long, SeatObj> seat : seatDemo.entrySet()) {
-            if (!seat.getValue().isInmutable()) {
-                iter = nextUnassigned(iter);
-                if (iter == null) {
-                    break;
-                }
-                seat.getValue().assignPassenger(passengers.get(iter));
-                iter++;
-            }
-        }
-
-        for (Map.Entry<Long, SeatObj> seat : seatDemo.entrySet()) {
-            if (seat.getValue().getPassenger() != null) {
-                assignedPassengers.add(seat.getValue().getPassenger()
-                        .copy(seat.getKey())
-                );
-            }
-        }
-    }
-
     private void separateSeatType() {
         for (PassengerDTO passenger : passengers) {
-            if (!seatTypesPurchases.containsKey(passenger.seatTypeId())) {
-                seatTypesPurchases.put(passenger.seatTypeId(), new ArrayList<>());
+            if (!passengersBySeatType.containsKey(passenger.seatTypeId())) {
+                passengersBySeatType.put(passenger.seatTypeId(), new ArrayList<>());
             }
-            seatTypesPurchases.get(passenger.seatTypeId()).add(passenger);
-        }
-    }
-
-    public Integer nextUnassigned(Integer iter) {
-        for (int i = iter; i < passengers.size(); i++) {
-            if (passengers.get(i).seatId() == null) {
-                return i;
-            }
-        }
-        return null;
-    }
-
-    private void verifyPurchaseGroup() {
-        Map<Long, List<PassengerDTO>> purchases = new HashMap<>();
-        for (PassengerDTO passenger : passengers) {
-            if (!purchases.containsKey(passenger.purchaseId())) {
-                purchases.put(passenger.purchaseId(), new ArrayList<>());
-            }
-            purchases.get(passenger.purchaseId()).add(passenger);
-        }
-        for (Map.Entry<Long, List<PassengerDTO>> purchase : purchases.entrySet()) {
-            Long seatTypeId = null;
-            System.out.println("Compra: " + purchase.getKey() + " Tamaño: " + purchase.getValue().size());
-            if (purchase.getValue().size() > 1) {
-                for (PassengerDTO passengerDTO : purchase.getValue()) {
-                    if (seatTypeId == null) {
-                        seatTypeId = passengerDTO.seatTypeId();
-                        System.out.println("\tEl mismo");
-                    } else {
-                        if (seatTypeId.equals(passengerDTO.seatTypeId())) {
-                            System.out.println("\tEl mismo");
-                        } else {
-                            System.out.println("\tDiferente");
-                        }
-                    }
-                }
-            } else {
-                System.out.println("\tÚnico");
-            }
+            passengersBySeatType.get(passenger.seatTypeId()).add(passenger);
         }
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Long, Map<Long, SeatObj>> seatType : seatsAirplane.entrySet()) {
+        for (Map.Entry<Long, Map<Long, SeatObj>> seatType : seatsBySeatType.entrySet()) {
             for (Map.Entry<Long, SeatObj> seat : seatType.getValue().entrySet()){
                 sb.append(seat.getKey())
                         .append(" - ")
@@ -282,7 +198,7 @@ public class AirplaneObj {
     }
 
     private void copyPassengers() {
-        for (Map.Entry<Long, Map<Long, SeatObj>> seatType : seatsAirplane.entrySet()) {
+        for (Map.Entry<Long, Map<Long, SeatObj>> seatType : seatsBySeatType.entrySet()) {
             for (Map.Entry<Long, SeatObj> seat : seatType.getValue().entrySet()) {
                 if (seat.getValue().getPassenger() != null) {
                     assignedPassengers.add(seat.getValue().getPassenger()
